@@ -1,0 +1,38 @@
+import Foundation
+
+/// Shared between the SwiftUI shell (start/HUD/game-over screens) and the SpriteKit scene,
+/// which writes `score` live during play and calls `endGame` on collision.
+final class GameState: ObservableObject {
+    enum Phase {
+        case start
+        case playing
+        case gameOver
+    }
+
+    @Published var phase: Phase = .start
+    @Published var score: Int = 0
+    @Published var isNewHighScore = false
+
+    private let highScoreKey = "spinodash.highScore"
+
+    var highScore: Int {
+        get { UserDefaults.standard.integer(forKey: highScoreKey) }
+        set { UserDefaults.standard.set(newValue, forKey: highScoreKey) }
+    }
+
+    func startGame() {
+        score = 0
+        isNewHighScore = false
+        phase = .playing
+    }
+
+    func endGame() {
+        if score > highScore {
+            highScore = score
+            isNewHighScore = true
+        } else {
+            isNewHighScore = false
+        }
+        phase = .gameOver
+    }
+}
