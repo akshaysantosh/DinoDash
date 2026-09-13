@@ -18,7 +18,18 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
     private let jumpFeedback = UIImpactFeedbackGenerator(style: .light)
     private let crashFeedback = UINotificationFeedbackGenerator()
 
+    private var hasSetUp = false
+
     override func didMove(to view: SKView) {
+        // SpriteKit can call didMove(to:) more than once for the same scene instance — e.g. when
+        // the hosting SKView resizes as the real device's safe area settles shortly after the
+        // view appears (doesn't happen in the Simulator's fixed viewport, which is why this
+        // wasn't caught earlier). Without this guard, a second call would duplicate the ground
+        // body, star layer, and the dino itself — leaving an orphaned copy still on screen while
+        // `dino` (and therefore `jump()`) points at a different node than what's visible.
+        guard !hasSetUp else { return }
+        hasSetUp = true
+
         backgroundColor = GameScene.creamColor
         physicsWorld.gravity = CGVector(dx: 0, dy: -900)
         physicsWorld.contactDelegate = self
