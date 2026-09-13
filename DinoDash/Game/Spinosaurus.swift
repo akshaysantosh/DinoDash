@@ -76,7 +76,7 @@ final class Spinosaurus: SKNode, PlayableDino {
 
         let body = SKPhysicsBody(rectangleOf: CGSize(width: 58, height: 40), center: CGPoint(x: 0, y: 6))
         body.isDynamic = true
-        body.affectedByGravity = true
+        body.affectedByGravity = false
         body.allowsRotation = false
         body.categoryBitMask = PhysicsCategory.spinosaurus
         body.contactTestBitMask = PhysicsCategory.asteroid | PhysicsCategory.star
@@ -103,13 +103,18 @@ final class Spinosaurus: SKNode, PlayableDino {
         legBack.run(.rotate(toAngle: 0, duration: 0.08))
     }
 
-    func jump() {
+    func jump(onLanded: @escaping () -> Void) {
         stopRunning()
-        physicsBody?.velocity = CGVector(dx: 0, dy: 480)
         run(.sequence([
             .group([.scaleX(to: 0.85, y: 1.2, duration: 0.08)]),
             .scaleX(to: 1, y: 1, duration: 0.15)
         ]))
+
+        let up = SKAction.moveBy(x: 0, y: PlayableDinoJump.height, duration: PlayableDinoJump.upDuration)
+        up.timingMode = .easeOut
+        let down = SKAction.moveBy(x: 0, y: -PlayableDinoJump.height, duration: PlayableDinoJump.downDuration)
+        down.timingMode = .easeIn
+        run(.sequence([up, down, .run(onLanded)]))
     }
 
     func landed() {
@@ -132,7 +137,6 @@ final class Spinosaurus: SKNode, PlayableDino {
         xScale = 1
         yScale = 1
         alpha = 1
-        physicsBody?.velocity = .zero
         startRunning()
     }
 }

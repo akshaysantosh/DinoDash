@@ -31,7 +31,6 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         hasSetUp = true
 
         backgroundColor = GameScene.creamColor
-        physicsWorld.gravity = CGVector(dx: 0, dy: -900)
         physicsWorld.contactDelegate = self
 
         groundY = size.height * 0.22
@@ -97,7 +96,11 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         guard isPlaying, isOnGround else { return }
         isOnGround = false
         jumpFeedback.impactOccurred()
-        dino.jump()
+        dino.jump { [weak self] in
+            guard let self else { return }
+            self.isOnGround = true
+            self.dino.landed()
+        }
     }
 
     /// Handled natively by SpriteKit rather than a SwiftUI `.onTapGesture` on the hosting
@@ -136,13 +139,6 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
             guard let self else { return }
             node.position.x -= self.gameSpeed * CGFloat(dt)
             if node.position.x < -80 { node.removeFromParent() }
-        }
-
-        if let body = dino.physicsBody, !isOnGround, body.velocity.dy <= 0, dino.position.y <= groundY + 20.5 {
-            dino.position.y = groundY + 20
-            body.velocity = .zero
-            isOnGround = true
-            dino.landed()
         }
 
         if distanceSinceSpawn >= nextSpawnDistance {
