@@ -15,8 +15,14 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
     private var nextSpawnDistance: CGFloat = 260
     private var starsLayer: SKNode!
 
+    /// Score needed for the roar's next charge — starts at `roarInterval` and pushes forward by
+    /// the same amount each time it's used, so it's always "100 more points away", not a banked
+    /// resource that can stack up.
+    private var nextRoarScore = GameScene.roarInterval
+
     private let jumpFeedback = UIImpactFeedbackGenerator(style: .light)
     private let crashFeedback = UINotificationFeedbackGenerator()
+    private let roarFeedback = UIImpactFeedbackGenerator(style: .heavy)
 
     private var hasSetUp = false
 
@@ -82,8 +88,10 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         gameSpeed = 260
         distanceSinceSpawn = 0
         nextSpawnDistance = 260
+        nextRoarScore = GameScene.roarInterval
         isOnGround = true
         isPlaying = true
+        gameState?.isRoarReady = false
 
         dino.position = CGPoint(x: size.width * 0.22, y: groundY + 20)
         dino.reset()
@@ -102,6 +110,41 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
             self.isOnGround = true
             self.dino.landed()
         }
+    }
+
+    static let roarInterval = 100
+
+    /// Sweeps a shockwave across the screen, destroying every current asteroid (not stars —
+    /// those stay a separate jump-for-it bonus). One charge at a time: using it immediately
+    /// pushes the next charge another `roarInterval` points out, rather than banking up.
+    func roar() {
+        guard isPlaying, gameState?.isRoarReady == true else { return }
+        gameState?.isRoarReady = false
+        nextRoarScore = (gameState?.score ?? 0) + GameScene.roarInterval
+
+        roarFeedback.impactOccurred()
+        run(.playSoundFileNamed("roar.wav", waitForCompletion: false))
+
+        let wave = SKShapeNode(circleOfRadius: 4)
+        wave.position = dino.position
+        wave.fillColor = SKColor(red: 0.76, green: 0.24, blue: 0.13, alpha: 0.35)
+        wave.strokeColor = SKColor(red: 0.76, green: 0.24, blue: 0.13, alpha: 0.6)
+        wave.lineWidth = 3
+        wave.zPosition = 7
+        addChild(wave)
+        wave.run(.sequence([
+            .group([.scale(to: size.width / 2, duration: 0.4), .fadeOut(withDuration: 0.4)]),
+            .removeFromParent()
+        ]))
+
+        var destroyed = 0
+        enumerateChildNodes(withName: "obstacle") { [weak self] node, _ in
+            guard let self, node.position.x >= self.dino.position.x - 40 else { return }
+            destroyed += 1
+            self.spawnSpark(at: node.position)
+            node.removeFromParent()
+        }
+        gameState?.score += destroyed * 10
     }
 
     /// Handled natively by SpriteKit rather than a SwiftUI `.onTapGesture` on the hosting
@@ -123,6 +166,10 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         let newScore = Int(elapsed * 10)
         if let gameState, newScore > gameState.score {
             gameState.score = newScore
+        }
+
+        if let gameState, gameState.isRoarReady == false, gameState.score >= nextRoarScore {
+            gameState.isRoarReady = true
         }
 
         distanceSinceSpawn += gameSpeed * CGFloat(dt)

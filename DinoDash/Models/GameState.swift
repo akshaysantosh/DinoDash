@@ -12,6 +12,9 @@ final class GameState: ObservableObject {
     @Published var phase: Phase = .start
     @Published var score: Int = 0
     @Published var isNewHighScore = false
+    /// Whether the roar power-move is currently charged. `GameScene` flips this on every 100
+    /// points survived and off again the moment it's used — a single charge, no banking.
+    @Published var isRoarReady = false
     @Published var selectedDino: DinoKind {
         didSet { UserDefaults.standard.set(selectedDino.rawValue, forKey: selectedDinoKey) }
     }
@@ -35,6 +38,7 @@ final class GameState: ObservableObject {
     func startGame() {
         score = 0
         isNewHighScore = false
+        isRoarReady = false
         phase = .playing
     }
 

@@ -5,6 +5,10 @@ struct GameView: View {
     @EnvironmentObject private var gameState: GameState
     @State private var scene: GameScene?
 
+    /// A deeper, fierier red than the shared design system's `accent`, so the roar button reads
+    /// distinctly from the jump button rather than as a second copy of the same accent color.
+    private static let roarActiveColor = Color(hex: "#c23b1e")
+
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .top) {
@@ -14,6 +18,7 @@ struct GameView: View {
                 }
                 hud
                 jumpButton
+                roarButton
             }
             .onAppear {
                 guard scene == nil else { return }
@@ -42,6 +47,30 @@ struct GameView: View {
                 }
                 .padding(.trailing, 28)
                 .padding(.bottom, 24)
+            }
+        }
+    }
+
+    private var roarButton: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Button {
+                    scene?.roar()
+                } label: {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 28, weight: .heavy))
+                        .foregroundStyle(Color.bgCard)
+                        .frame(width: 84, height: 84)
+                        .background(
+                            gameState.isRoarReady ? GameView.roarActiveColor : Color.textFaint.opacity(0.5),
+                            in: Circle()
+                        )
+                }
+                .disabled(!gameState.isRoarReady)
+                .padding(.leading, 28)
+                .padding(.bottom, 24)
+                Spacer()
             }
         }
     }
