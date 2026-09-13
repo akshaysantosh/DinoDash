@@ -9,28 +9,8 @@ A simple endless runner for my son — pick a dino (Ankylosaurus by default, or 
 
 *(Screenshots are from live Simulator gameplay, not mockups.)*
 
-## One-time setup
-
-Same as PriceTrack/Stash/SpotFinder:
-
-1. **Install Xcode** from the Mac App Store, if you haven't already (shared across all your personal apps).
-2. **Install XcodeGen** (skip if already installed): `brew install xcodegen`
-3. **Generate the Xcode project** (run from this `DinoDash/` folder):
-   ```bash
-   xcodegen generate
-   ```
-   Note: `DinoDash/App/Info.plist` is **generated** from the `info.properties` block in `project.yml` — edit it there, not in the plist file directly.
-4. **Open `DinoDash.xcodeproj` in Xcode**, select the `DinoDash` target → *Signing & Capabilities* → pick your Apple ID under *Team*.
-5. To run on your iPhone: plug it in (or set up wireless debugging), pick it as the run destination in Xcode's device menu instead of a Simulator, then Build and run (⌘R). The first time, your phone will refuse to open the app until you trust the developer certificate: **Settings → General → VPN & Device Management → [your Apple ID] → Trust**.
-
-No accounts, no backend, no persistence beyond a local high score and your last-picked character (`UserDefaults`) — the whole game runs offline. Landscape only, unlike the other three apps, since a side-scrolling runner needs the horizontal room to see obstacles coming.
-
 ## How it works
 
 - **Start** — shows your best score (if any), the currently selected dino with left/right arrows to switch characters, and waits for a tap anywhere to begin.
 - **Play** — the dino auto-runs; tap anywhere (or the on-screen jump button) to jump, with a whoosh sound effect. Asteroids come in two flavors: ground-level ones you must jump, and elevated ones you must *not* jump into, each trailing small falling embers. Speed and spawn frequency ramp up the longer you survive. Clearing a ground asteroid mid-air by a hair scores a near-miss bonus with a spark effect; collectible stars chime when grabbed mid-jump. Every 100 points, the roar button (bottom-left) lights up — tap it to sweep a shockwave across the screen that clears every current asteroid for a bonus, then it greys out until the next 100. The background gradually shifts from cream daylight to dusk to a starry night as your score climbs.
 - **Crash** — a thud, a screen flash, and a haptic thump, then your score and (if beaten) a "New High Score!" callout. Tap anywhere to retry instantly with the same dino, or tap **Change Dino** to head back to the Start screen and pick a different character.
-
-## Project structure
-
-`App` (entry point), `Models` (`GameState` — start/playing/game-over phase, score, roar-ready flag, `UserDefaults`-backed high score and selected character; `DinoKind` — the character roster and a factory for building each one's node), `Game` (SpriteKit layer: `GameScene` driving physics/spawning/scoring/difficulty/sound/the roar power-move, `PlayableDino` protocol implemented by `Spinosaurus` and `Ankylosaurus` — both shape-built nodes, plus `Asteroid`/`Star`/`PhysicsCategory`), `Features` (`RootView` switching on game phase, `StartScreenView` with the character picker, `GameView` wrapping the `SpriteView` with a score/best HUD, jump button, and roar button, `GameOverView`), `DesignSystem` (colors, type, card/button components — copied from Stash unchanged, same look and feel as the other three apps), `Resources/Sounds` (short synthesized jump/collect/crash/roar effects, no external assets).
