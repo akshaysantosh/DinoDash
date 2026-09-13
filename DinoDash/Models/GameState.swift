@@ -47,4 +47,8 @@ final class GameState: ObservableObject {
         }
         phase = .gameOver
     }
+
+    func backToStart() {
+        phase = .start
+    }
 }

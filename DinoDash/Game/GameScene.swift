@@ -96,6 +96,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         guard isPlaying, isOnGround else { return }
         isOnGround = false
         jumpFeedback.impactOccurred()
+        run(.playSoundFileNamed("jump.wav", waitForCompletion: false))
         dino.jump { [weak self] in
             guard let self else { return }
             self.isOnGround = true
@@ -241,6 +242,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
                 spawnSpark(at: starNode.position)
                 starNode.removeFromParent()
             }
+            run(.playSoundFileNamed("collect.wav", waitForCompletion: false))
             gameState?.score += 25
         }
     }
@@ -249,6 +251,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         guard isPlaying else { return }
         isPlaying = false
         crashFeedback.notificationOccurred(.error)
+        run(.playSoundFileNamed("crash.wav", waitForCompletion: false))
         dino.crash()
 
         let flash = SKShapeNode(rectOf: CGSize(width: size.width, height: size.height))

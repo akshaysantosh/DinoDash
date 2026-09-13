@@ -20,6 +20,11 @@ struct GameOverView: View {
                     .buttonStyle(.primary)
                     .padding(.horizontal, 40)
                     .padding(.top, 6)
+                Button("Change Dino") { gameState.backToStart() }
+                    .font(AppFont.secondaryDetail())
+                    .foregroundStyle(Color.textSecondary)
+                    .underline()
+                    .padding(.top, 2)
             }
             .padding(32)
         }
