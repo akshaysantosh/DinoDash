@@ -3,7 +3,7 @@ import SpriteKit
 /// Built from a handful of hand-wobbled bezier shapes rather than sprite art — same organic,
 /// slightly-imperfect-curve spirit as the bikablo app icons, just filled instead of stroked
 /// (a filled silhouette reads far better at speed than a thin outline would).
-final class Spinosaurus: SKNode {
+final class Spinosaurus: SKNode, PlayableDino {
     static let bodyColor = SKColor(red: 0.478, green: 0.353, blue: 0.541, alpha: 1)
 
     private let bodyShape: SKShapeNode

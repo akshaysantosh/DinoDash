@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "dino-preview-ankylosaurus.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

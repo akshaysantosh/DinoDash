@@ -1,4 +1,4 @@
-name: SpinoDash
+name: DinoDash
 options:
   deploymentTarget:
     iOS: "17.0"
@@ -7,16 +7,16 @@ configs:
   Debug: debug
   Release: release
 targets:
-  SpinoDash:
+  DinoDash:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
     sources:
-      - path: SpinoDash
+      - path: DinoDash
         excludes:
           - "App/Info.plist"
     info:
-      path: SpinoDash/App/Info.plist
+      path: DinoDash/App/Info.plist
       properties:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
@@ -27,8 +27,8 @@ targets:
         UIRequiresFullScreen: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.akshay.spinodash
-        PRODUCT_NAME: SpinoDash
+        PRODUCT_BUNDLE_IDENTIFIER: com.akshay.dinodash
+        PRODUCT_NAME: DinoDash
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "5.0"
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"

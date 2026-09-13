@@ -4,7 +4,7 @@ import UIKit
 final class GameScene: SKScene, SKPhysicsContactDelegate {
     weak var gameState: GameState?
 
-    private var spino: Spinosaurus!
+    private var dino: PlayableDino!
     private var groundY: CGFloat = 0
     private var isPlaying = false
     private var isOnGround = true
@@ -44,9 +44,9 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(starsLayer)
         scatterBackgroundStars()
 
-        spino = Spinosaurus()
-        spino.zPosition = 5
-        addChild(spino)
+        dino = (gameState?.selectedDino ?? .ankylosaurus).makeNode()
+        dino.zPosition = 5
+        addChild(dino)
 
         jumpFeedback.prepare()
         startRun()
@@ -75,8 +75,8 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         isOnGround = true
         isPlaying = true
 
-        spino.position = CGPoint(x: size.width * 0.22, y: groundY + 20)
-        spino.reset()
+        dino.position = CGPoint(x: size.width * 0.22, y: groundY + 20)
+        dino.reset()
 
         backgroundColor = GameScene.creamColor
         starsLayer.alpha = 0
@@ -86,7 +86,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         guard isPlaying, isOnGround else { return }
         isOnGround = false
         jumpFeedback.impactOccurred()
-        spino.jump()
+        dino.jump()
     }
 
     override func update(_ currentTime: TimeInterval) {
@@ -117,11 +117,11 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
             if node.position.x < -80 { node.removeFromParent() }
         }
 
-        if let body = spino.physicsBody, !isOnGround, body.velocity.dy <= 0, spino.position.y <= groundY + 20.5 {
-            spino.position.y = groundY + 20
+        if let body = dino.physicsBody, !isOnGround, body.velocity.dy <= 0, dino.position.y <= groundY + 20.5 {
+            dino.position.y = groundY + 20
             body.velocity = .zero
             isOnGround = true
-            spino.landed()
+            dino.landed()
         }
 
         if distanceSinceSpawn >= nextSpawnDistance {
@@ -137,12 +137,12 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         guard let asteroid = node as? Asteroid,
               asteroid.userData?["counted"] == nil,
               !asteroid.isElevated else { return }
-        guard node.position.x <= spino.position.x else { return }
+        guard node.position.x <= dino.position.x else { return }
         if asteroid.userData == nil { asteroid.userData = [:] }
         asteroid.userData?["counted"] = true
         if !isOnGround {
             gameState?.score += 5
-            spawnSpark(at: CGPoint(x: spino.position.x, y: spino.position.y + 20))
+            spawnSpark(at: CGPoint(x: dino.position.x, y: dino.position.y + 20))
         }
     }
 
@@ -213,7 +213,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         guard isPlaying else { return }
         isPlaying = false
         crashFeedback.notificationOccurred(.error)
-        spino.crash()
+        dino.crash()
 
         let flash = SKShapeNode(rectOf: CGSize(width: size.width, height: size.height))
         flash.fillColor = .white

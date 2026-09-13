@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct SpinoDashApp: App {
+struct DinoDashApp: App {
     @StateObject private var gameState = GameState()
 
     var body: some Scene {

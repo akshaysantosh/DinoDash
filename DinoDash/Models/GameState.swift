@@ -12,12 +12,24 @@ final class GameState: ObservableObject {
     @Published var phase: Phase = .start
     @Published var score: Int = 0
     @Published var isNewHighScore = false
+    @Published var selectedDino: DinoKind {
+        didSet { UserDefaults.standard.set(selectedDino.rawValue, forKey: selectedDinoKey) }
+    }
 
-    private let highScoreKey = "spinodash.highScore"
+    private let highScoreKey = "dinodash.highScore"
+    private let selectedDinoKey = "dinodash.selectedDino"
 
     var highScore: Int {
         get { UserDefaults.standard.integer(forKey: highScoreKey) }
         set { UserDefaults.standard.set(newValue, forKey: highScoreKey) }
+    }
+
+    init() {
+        if let raw = UserDefaults.standard.string(forKey: selectedDinoKey), let kind = DinoKind(rawValue: raw) {
+            selectedDino = kind
+        } else {
+            selectedDino = .ankylosaurus
+        }
     }
 
     func startGame() {
