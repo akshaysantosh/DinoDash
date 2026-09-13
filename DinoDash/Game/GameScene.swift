@@ -89,6 +89,13 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         dino.jump()
     }
 
+    /// Handled natively by SpriteKit rather than a SwiftUI `.onTapGesture` on the hosting
+    /// `SpriteView` — that combination is unreliable on real devices (the SwiftUI gesture
+    /// recognizer and the SKView's own touch handling can end up competing for the touch).
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        jump()
+    }
+
     override func update(_ currentTime: TimeInterval) {
         guard isPlaying else { return }
         if lastUpdateTime == 0 { lastUpdateTime = currentTime }
@@ -109,6 +116,9 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
             guard let self else { return }
             node.position.x -= self.gameSpeed * CGFloat(dt)
             self.checkNearMiss(node)
+            if CGFloat.random(in: 0...1) < 0.18 {
+                self.spawnAsteroidTrail(at: node.position)
+            }
             if node.position.x < -80 { node.removeFromParent() }
         }
         enumerateChildNodes(withName: "star") { [weak self] node, _ in
@@ -155,6 +165,25 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(spark)
         spark.run(.sequence([
             .group([.scale(to: 2.2, duration: 0.3), .fadeOut(withDuration: 0.3), .moveBy(x: 0, y: 18, duration: 0.3)]),
+            .removeFromParent()
+        ]))
+    }
+
+    private func spawnAsteroidTrail(at point: CGPoint) {
+        let ember = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.5...3))
+        ember.fillColor = SKColor(red: 0.93, green: 0.52, blue: 0.22, alpha: 1)
+        ember.strokeColor = .clear
+        ember.alpha = 0.9
+        ember.position = CGPoint(x: point.x + CGFloat.random(in: -3...3),
+                                  y: point.y + CGFloat.random(in: 4...14))
+        ember.zPosition = 3
+        addChild(ember)
+        ember.run(.sequence([
+            .group([
+                .fadeOut(withDuration: 0.35),
+                .scale(to: 0.4, duration: 0.35),
+                .moveBy(x: CGFloat.random(in: 4...9), y: CGFloat.random(in: 6...12), duration: 0.35)
+            ]),
             .removeFromParent()
         ]))
     }

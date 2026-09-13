@@ -11,7 +11,6 @@ struct GameView: View {
                 if let scene {
                     SpriteView(scene: scene)
                         .ignoresSafeArea()
-                        .onTapGesture { scene.jump() }
                 }
                 hud
             }
