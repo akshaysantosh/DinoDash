@@ -13,6 +13,7 @@ struct GameView: View {
                         .ignoresSafeArea()
                 }
                 hud
+                jumpButton
             }
             .onAppear {
                 guard scene == nil else { return }
@@ -23,6 +24,26 @@ struct GameView: View {
             }
         }
         .ignoresSafeArea()
+    }
+
+    private var jumpButton: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Button {
+                    scene?.jump()
+                } label: {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 30, weight: .heavy))
+                        .foregroundStyle(Color.bgCard)
+                        .frame(width: 84, height: 84)
+                        .background(Color.accent, in: Circle())
+                }
+                .padding(.trailing, 28)
+                .padding(.bottom, 24)
+            }
+        }
     }
 
     private var hud: some View {
