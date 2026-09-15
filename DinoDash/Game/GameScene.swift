@@ -10,10 +10,19 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
     private var isOnGround = true
     private var elapsed: TimeInterval = 0
     private var lastUpdateTime: TimeInterval = 0
-    private var gameSpeed: CGFloat = 260
+    private var gameSpeed: CGFloat = GameScene.startingSpeed
     private var distanceSinceSpawn: CGFloat = 0
-    private var nextSpawnDistance: CGFloat = 260
+    private var nextSpawnDistance: CGFloat = GameScene.firstSpawnDistance
     private var starsLayer: SKNode!
+
+    /// A gentler opening: slower starting speed and a longer gap before the very first obstacle,
+    /// so a new player (especially a kid) gets a few seconds to find the jump timing before
+    /// anything needs dodging. The long-term ramp rate and cap are unchanged — this only softens
+    /// the first several seconds, not the difficulty ceiling.
+    private static let startingSpeed: CGFloat = 190
+    private static let maxSpeed: CGFloat = 560
+    private static let speedRampPerSecond: CGFloat = 7
+    private static let firstSpawnDistance: CGFloat = 460
 
     /// Score needed for the roar's next charge — starts at `roarInterval` and pushes forward by
     /// the same amount each time it's used, so it's always "100 more points away", not a banked
@@ -85,9 +94,9 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
 
         elapsed = 0
         lastUpdateTime = 0
-        gameSpeed = 260
+        gameSpeed = GameScene.startingSpeed
         distanceSinceSpawn = 0
-        nextSpawnDistance = 260
+        nextSpawnDistance = GameScene.firstSpawnDistance
         nextRoarScore = GameScene.roarInterval
         isOnGround = true
         isPlaying = true
@@ -170,7 +179,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         lastUpdateTime = currentTime
         elapsed += dt
 
-        gameSpeed = min(560, 260 + CGFloat(elapsed) * 7)
+        gameSpeed = min(GameScene.maxSpeed, GameScene.startingSpeed + CGFloat(elapsed) * GameScene.speedRampPerSecond)
 
         let newScore = Int(elapsed * 10)
         if let gameState, newScore > gameState.score {
