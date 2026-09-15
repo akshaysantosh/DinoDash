@@ -19,6 +19,7 @@ struct GameView: View {
                 hud
                 jumpButton
                 roarButton
+                pauseOverlay
             }
             .onAppear {
                 guard scene == nil else { return }
@@ -79,10 +80,53 @@ struct GameView: View {
         HStack {
             hudPill(label: "SCORE", value: gameState.score)
             Spacer()
+            pauseButton
+            Spacer()
             hudPill(label: "BEST", value: gameState.highScore)
         }
         .padding(.horizontal, 20)
         .padding(.top, 16)
+    }
+
+    private var pauseButton: some View {
+        Button {
+            scene?.togglePause()
+        } label: {
+            Image(systemName: "pause.fill")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(Color.ink)
+                .frame(width: 44, height: 44)
+                .background(Color.bgCard.opacity(0.85), in: Circle())
+        }
+    }
+
+    /// A dim scrim with the current dino's own preview art in the foreground — reuses the same
+    /// image built for the Start screen's character picker rather than needing separate art.
+    private var pauseOverlay: some View {
+        Group {
+            if gameState.isPaused {
+                ZStack {
+                    Color.black.opacity(0.55).ignoresSafeArea()
+                    VStack(spacing: 14) {
+                        Image(gameState.selectedDino.previewImageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 190, height: 114)
+                        Text("Paused")
+                            .font(.system(size: 26, weight: .heavy))
+                            .foregroundStyle(Color.ink)
+                        Button("Resume") { scene?.togglePause() }
+                            .buttonStyle(.primary)
+                            .padding(.horizontal, 36)
+                    }
+                    .padding(28)
+                    .background(Color.bgPage, in: RoundedRectangle(cornerRadius: AppMetrics.cardRadius))
+                    .padding(.horizontal, 70)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { scene?.togglePause() }
+            }
+        }
     }
 
     private func hudPill(label: String, value: Int) -> some View {

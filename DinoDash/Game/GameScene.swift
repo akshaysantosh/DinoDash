@@ -100,8 +100,17 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         starsLayer.alpha = 0
     }
 
+    /// Toggles SpriteKit's own `isPaused` — since `GameScene` is the root node, this freezes
+    /// every action and physics simulation in the whole tree (leg-swing loops, asteroid drift,
+    /// ember trails, all of it) with no per-node bookkeeping needed.
+    func togglePause() {
+        guard isPlaying else { return }
+        isPaused.toggle()
+        gameState?.isPaused = isPaused
+    }
+
     func jump() {
-        guard isPlaying, isOnGround else { return }
+        guard isPlaying, isOnGround, !isPaused else { return }
         isOnGround = false
         jumpFeedback.impactOccurred()
         run(.playSoundFileNamed("jump.wav", waitForCompletion: false))
@@ -118,7 +127,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
     /// those stay a separate jump-for-it bonus). One charge at a time: using it immediately
     /// pushes the next charge another `roarInterval` points out, rather than banking up.
     func roar() {
-        guard isPlaying, gameState?.isRoarReady == true else { return }
+        guard isPlaying, !isPaused, gameState?.isRoarReady == true else { return }
         gameState?.isRoarReady = false
         nextRoarScore = (gameState?.score ?? 0) + GameScene.roarInterval
 
