@@ -28,6 +28,11 @@ extension Color {
     // Extra warm-palette tones used only for per-category accents (Category.accentColor).
     static let categoryGold = Color(hex: "#c98a2b")
     static let categoryClay = Color(hex: "#a67c5a")
+
+    // Leaderboard medal tones (1st/2nd/3rd place).
+    static let medalGold = Color(hex: "#c9982b")
+    static let medalSilver = Color(hex: "#9a9a9a")
+    static let medalBronze = Color(hex: "#a1662f")
 }
 
 enum AppFont {
@@ -45,4 +50,14 @@ enum AppMetrics {
     static let statRadius: CGFloat = 14
     static let cardPadding: CGFloat = 16
     static let cardSpacing: CGFloat = 16
+}
+
+extension Medal {
+    var color: Color {
+        switch self {
+        case .gold: return .medalGold
+        case .silver: return .medalSilver
+        case .bronze: return .medalBronze
+        }
+    }
 }

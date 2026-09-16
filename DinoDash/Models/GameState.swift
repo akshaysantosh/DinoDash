@@ -20,19 +20,27 @@ final class GameState: ObservableObject {
         didSet { UserDefaults.standard.set(selectedDino.rawValue, forKey: selectedDinoKey) }
     }
 
-    private let highScoreKey = "dinodash.highScore"
-    private let selectedDinoKey = "dinodash.selectedDino"
+    /// Top 3 scores, sorted descending — persisted as `leaderboard`.
+    @Published private(set) var leaderboard: [LeaderboardEntry] = []
+    /// True while a just-finished run's score qualifies for the top 3 but hasn't been named yet
+    /// (drives the name-entry prompt on GameOverView) — the run's score is only actually
+    /// inserted into `leaderboard` once a name is given (or discarded via `skipLeaderboardEntry`).
+    @Published var qualifiesForLeaderboard = false
 
-    var highScore: Int {
-        get { UserDefaults.standard.integer(forKey: highScoreKey) }
-        set { UserDefaults.standard.set(newValue, forKey: highScoreKey) }
-    }
+    private let selectedDinoKey = "dinodash.selectedDino"
+    private let leaderboardKey = "dinodash.leaderboard"
+
+    var highScore: Int { leaderboard.first?.score ?? 0 }
 
     init() {
         if let raw = UserDefaults.standard.string(forKey: selectedDinoKey), let kind = DinoKind(rawValue: raw) {
             selectedDino = kind
         } else {
             selectedDino = .ankylosaurus
+        }
+        if let data = UserDefaults.standard.data(forKey: leaderboardKey),
+           let decoded = try? JSONDecoder().decode([LeaderboardEntry].self, from: data) {
+            leaderboard = decoded
         }
     }
 
@@ -41,17 +49,38 @@ final class GameState: ObservableObject {
         isNewHighScore = false
         isRoarReady = false
         isPaused = false
+        qualifiesForLeaderboard = false
         phase = .playing
     }
 
     func endGame() {
-        if score > highScore {
-            highScore = score
-            isNewHighScore = true
-        } else {
-            isNewHighScore = false
-        }
+        isNewHighScore = score > highScore && score > 0
+        // Qualifies if there's an open slot, or this run beats the current 3rd place — a tie
+        // doesn't displace an existing entry, so ties don't churn the board on every replay.
+        qualifiesForLeaderboard = score > 0
+            && (leaderboard.count < 3 || score > (leaderboard.last?.score ?? 0))
         phase = .gameOver
+    }
+
+    /// Records the just-finished run under `name`, re-sorts, and keeps only the top 3.
+    func submitLeaderboardName(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let displayName = trimmed.isEmpty ? "You" : String(trimmed.prefix(16))
+        leaderboard.append(LeaderboardEntry(name: displayName, score: score))
+        leaderboard.sort { $0.score > $1.score }
+        leaderboard = Array(leaderboard.prefix(3))
+        persistLeaderboard()
+        qualifiesForLeaderboard = false
+    }
+
+    /// Discards the pending qualifying score without adding it to the leaderboard.
+    func skipLeaderboardEntry() {
+        qualifiesForLeaderboard = false
+    }
+
+    private func persistLeaderboard() {
+        guard let data = try? JSONEncoder().encode(leaderboard) else { return }
+        UserDefaults.standard.set(data, forKey: leaderboardKey)
     }
 
     func backToStart() {

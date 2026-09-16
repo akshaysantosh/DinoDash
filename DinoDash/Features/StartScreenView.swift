@@ -14,10 +14,8 @@ struct StartScreenView: View {
                     .font(AppFont.body())
                     .foregroundStyle(Color.textSecondary)
                 characterPicker
-                if gameState.highScore > 0 {
-                    Text("Best: \(gameState.highScore)")
-                        .font(AppFont.secondaryDetail())
-                        .foregroundStyle(Color.textMuted)
+                if !gameState.leaderboard.isEmpty {
+                    leaderboardCard
                 }
                 Button("Tap to Start") { gameState.startGame() }
                     .buttonStyle(.primary)
@@ -27,6 +25,33 @@ struct StartScreenView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { gameState.startGame() }
+    }
+
+    private var leaderboardCard: some View {
+        VStack(spacing: 8) {
+            ForEach(Array(gameState.leaderboard.enumerated()), id: \.element.id) { index, entry in
+                if let medal = Medal(rawValue: index) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "medal.fill")
+                            .foregroundStyle(medal.color)
+                            .font(.system(size: 15, weight: .semibold))
+                            .frame(width: 20)
+                        Text(entry.name)
+                            .font(AppFont.body())
+                            .foregroundStyle(Color.bodyText)
+                        Spacer()
+                        Text("\(entry.score)")
+                            .font(AppFont.body())
+                            .fontWeight(.bold)
+                            .foregroundStyle(Color.ink)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, AppMetrics.cardPadding)
+        .padding(.vertical, 12)
+        .background(Color.bgCard, in: RoundedRectangle(cornerRadius: AppMetrics.cardRadius))
+        .frame(maxWidth: 260)
     }
 
     private var characterPicker: some View {

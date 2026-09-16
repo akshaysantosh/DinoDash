@@ -16,8 +16,11 @@ protocol PlayableDino: SKNode {
 
 /// Shared jump-arc timing, matched across all `PlayableDino` implementations so every
 /// character clears obstacles the same way regardless of its shape.
+///
+/// Bumped up from the original 130/0.26/0.30 — that arc felt a bit tight against elevated
+/// asteroids, so this gives a bit more height and hang time to clear them more comfortably.
 enum PlayableDinoJump {
-    static let height: CGFloat = 130
-    static let upDuration: TimeInterval = 0.26
-    static let downDuration: TimeInterval = 0.30
+    static let height: CGFloat = 155
+    static let upDuration: TimeInterval = 0.30
+    static let downDuration: TimeInterval = 0.34
 }
