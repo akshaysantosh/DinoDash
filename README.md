@@ -1,6 +1,6 @@
 # DinoDash
 
-A simple endless runner for my son — pick a dino (Ankylosaurus by default, or Spinosaurus), then auto-run across the ground, tapping anywhere to jump over asteroids (some you must jump, some you must let pass), with a rising difficulty curve, near-miss bonus points, collectible stars, and a background that shifts from day to dusk to deep space the longer you survive. Inspired by the Chrome offline dino game.
+A simple endless runner for my son — pick a dino (Ankylosaurus by default, or Brachiosaurus), then auto-run across the ground, tapping anywhere to jump over asteroids (some you must jump, some you must let pass), with a rising difficulty curve, near-miss bonus points, collectible stars, and a background that shifts from day to dusk to deep space the longer you survive. Inspired by the Chrome offline dino game.
 
 <p>
   <img src="screenshots/start.png" width="260" alt="Start screen with the Ankylosaurus selected, character picker arrows, and Tap to Start button">

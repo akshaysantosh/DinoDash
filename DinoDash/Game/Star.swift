@@ -25,7 +25,7 @@ final class Star: SKShapeNode {
         let body = SKPhysicsBody(circleOfRadius: outerRadius)
         body.isDynamic = false
         body.categoryBitMask = PhysicsCategory.star
-        body.contactTestBitMask = PhysicsCategory.spinosaurus
+        body.contactTestBitMask = PhysicsCategory.player
         body.collisionBitMask = 0
         physicsBody = body
 

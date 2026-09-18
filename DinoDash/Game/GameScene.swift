@@ -14,6 +14,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
     private var distanceSinceSpawn: CGFloat = 0
     private var nextSpawnDistance: CGFloat = GameScene.firstSpawnDistance
     private var starsLayer: SKNode!
+    private var moon: SKNode!
     private var hillsLayer: SKNode!
     private var hillTiles: [SKShapeNode] = []
     private var hillTileWidth: CGFloat = 0
@@ -74,6 +75,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         starsLayer.zPosition = 0
         addChild(starsLayer)
         scatterBackgroundStars()
+        setupMoon()
 
         setupHills()
 
@@ -94,6 +96,32 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
                                     y: CGFloat.random(in: groundY...size.height))
             starsLayer.addChild(dot)
         }
+    }
+
+    /// A simple crescent built from two overlapping circles — a pale body with a second circle,
+    /// filled to match the night sky color, offset over it to "bite" a crescent shape out. Kept
+    /// independent of `starsLayer` (whose alpha fades with score) since the moon should only ever
+    /// show when Night Mode is explicitly on, not as part of the score-based sky progression.
+    private func setupMoon() {
+        let radius: CGFloat = 22
+        moon = SKNode()
+
+        let body = SKShapeNode(circleOfRadius: radius)
+        body.fillColor = SKColor(red: 0.97, green: 0.95, blue: 0.86, alpha: 1)
+        body.strokeColor = .clear
+        moon.addChild(body)
+
+        let bite = SKShapeNode(circleOfRadius: radius * 0.82)
+        bite.fillColor = GameScene.nightSkyColor
+        bite.strokeColor = .clear
+        bite.position = CGPoint(x: radius * 0.55, y: radius * 0.35)
+        bite.zPosition = 1
+        moon.addChild(bite)
+
+        moon.position = CGPoint(x: size.width * 0.78, y: size.height * 0.82)
+        moon.zPosition = 0.1
+        moon.isHidden = true
+        addChild(moon)
     }
 
     private static let hillColor = SKColor(red: 0.80, green: 0.66, blue: 0.55, alpha: 0.5)
@@ -175,8 +203,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         dino.position = CGPoint(x: size.width * 0.22, y: groundY + 20)
         dino.reset()
 
-        backgroundColor = GameScene.creamColor
-        starsLayer.alpha = 0
+        updateBackground(for: 0)
     }
 
     /// Toggles SpriteKit's own `isPaused` — since `GameScene` is the root node, this freezes
@@ -473,8 +500,20 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     private static let creamColor = SKColor(red: 0.969, green: 0.965, blue: 0.953, alpha: 1)
+    private static let nightSkyColor = SKColor(red: 0.08, green: 0.07, blue: 0.14, alpha: 1)
 
+    /// Night Mode forces the sky straight to the same dark palette the score-based progression
+    /// eventually reaches on its own, plus the moon — an explicit, immediate look rather than
+    /// something you have to survive long enough to see.
     private func updateBackground(for score: Int) {
+        guard gameState?.isNightMode != true else {
+            backgroundColor = GameScene.nightSkyColor
+            starsLayer.alpha = 1
+            moon.isHidden = false
+            return
+        }
+        moon.isHidden = true
+
         let t = min(1, CGFloat(score) / 700)
         let cream: (CGFloat, CGFloat, CGFloat) = (0.969, 0.965, 0.953)
         let dusk: (CGFloat, CGFloat, CGFloat) = (0.85, 0.55, 0.45)
@@ -493,9 +532,9 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
 
     func didBegin(_ contact: SKPhysicsContact) {
         let mask = contact.bodyA.categoryBitMask | contact.bodyB.categoryBitMask
-        if mask == (PhysicsCategory.spinosaurus | PhysicsCategory.asteroid) {
+        if mask == (PhysicsCategory.player | PhysicsCategory.asteroid) {
             crash()
-        } else if mask == (PhysicsCategory.spinosaurus | PhysicsCategory.star) {
+        } else if mask == (PhysicsCategory.player | PhysicsCategory.star) {
             let starNode = contact.bodyA.categoryBitMask == PhysicsCategory.star ? contact.bodyA.node : contact.bodyB.node
             if let starNode {
                 spawnSpark(at: starNode.position)

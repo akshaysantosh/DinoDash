@@ -19,6 +19,13 @@ final class GameState: ObservableObject {
     @Published var selectedDino: DinoKind {
         didSet { UserDefaults.standard.set(selectedDino.rawValue, forKey: selectedDinoKey) }
     }
+    /// Manual override for the sky — forces the night sky (stars + moon) on regardless of score,
+    /// instead of the normal day-to-dusk-to-space progression `GameScene` ramps with survival
+    /// time. Sticks across sessions like `selectedDino`, since it's a look preference, not
+    /// per-run state.
+    @Published var isNightMode: Bool {
+        didSet { UserDefaults.standard.set(isNightMode, forKey: nightModeKey) }
+    }
 
     /// Top 3 scores, sorted descending — persisted as `leaderboard`.
     @Published private(set) var leaderboard: [LeaderboardEntry] = []
@@ -29,6 +36,7 @@ final class GameState: ObservableObject {
 
     private let selectedDinoKey = "dinodash.selectedDino"
     private let leaderboardKey = "dinodash.leaderboard"
+    private let nightModeKey = "dinodash.isNightMode"
 
     var highScore: Int { leaderboard.first?.score ?? 0 }
 
@@ -38,6 +46,7 @@ final class GameState: ObservableObject {
         } else {
             selectedDino = .ankylosaurus
         }
+        isNightMode = UserDefaults.standard.bool(forKey: nightModeKey)
         if let data = UserDefaults.standard.data(forKey: leaderboardKey),
            let decoded = try? JSONDecoder().decode([LeaderboardEntry].self, from: data) {
             leaderboard = decoded

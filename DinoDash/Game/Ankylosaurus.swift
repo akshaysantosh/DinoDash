@@ -1,6 +1,6 @@
 import SpriteKit
 
-/// Same hand-tuned bezier-shape technique as Spinosaurus — a low, wide, armored body with
+/// Same hand-tuned bezier-shape technique as Brachiosaurus — a low, wide, armored body with
 /// rounded back plates (not pointed spikes, to avoid reading as quills) and the defining
 /// ankylosaurus feature: a round club at the tail tip, built as its own circle node.
 final class Ankylosaurus: SKNode, PlayableDino {
@@ -109,7 +109,7 @@ final class Ankylosaurus: SKNode, PlayableDino {
         body.isDynamic = true
         body.affectedByGravity = false
         body.allowsRotation = false
-        body.categoryBitMask = PhysicsCategory.spinosaurus
+        body.categoryBitMask = PhysicsCategory.player
         body.contactTestBitMask = PhysicsCategory.asteroid | PhysicsCategory.star
         body.collisionBitMask = PhysicsCategory.ground
         self.physicsBody = body

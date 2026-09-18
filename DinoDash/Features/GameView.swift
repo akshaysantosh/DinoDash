@@ -19,6 +19,7 @@ struct GameView: View {
                 hud
                 jumpButton
                 roarButton
+                pauseButtonBottom
                 pauseOverlay
             }
             .onAppear {
@@ -80,7 +81,7 @@ struct GameView: View {
         HStack {
             hudPill(label: "SCORE", value: gameState.score)
             Spacer()
-            pauseButton
+            nightModeButton
             Spacer()
             hudPill(label: "BEST", value: gameState.highScore)
         }
@@ -88,15 +89,38 @@ struct GameView: View {
         .padding(.top, 16)
     }
 
-    private var pauseButton: some View {
+    private var nightModeButton: some View {
         Button {
-            scene?.togglePause()
+            gameState.isNightMode.toggle()
         } label: {
-            Image(systemName: "pause.fill")
+            Image(systemName: "moon.stars.fill")
                 .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(Color.ink)
+                .foregroundStyle(gameState.isNightMode ? Color.accent : Color.ink)
                 .frame(width: 44, height: 44)
                 .background(Color.bgCard.opacity(0.85), in: Circle())
+        }
+    }
+
+    /// Moved down here (was in the top HUD, where `nightModeButton` now sits) so it doesn't
+    /// crowd the score/best pills, and to sit clear of `jumpButton`/`roarButton` at the
+    /// trailing/leading bottom corners.
+    private var pauseButtonBottom: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Button {
+                    scene?.togglePause()
+                } label: {
+                    Image(systemName: "pause.fill")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(Color.ink)
+                        .frame(width: 44, height: 44)
+                        .background(Color.bgCard.opacity(0.85), in: Circle())
+                }
+                Spacer()
+            }
+            .padding(.bottom, 24)
         }
     }
 

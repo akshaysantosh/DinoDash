@@ -3,7 +3,7 @@ import SpriteKit
 /// Built from a handful of hand-wobbled bezier shapes rather than sprite art — same organic,
 /// slightly-imperfect-curve spirit as the bikablo app icons, just filled instead of stroked
 /// (a filled silhouette reads far better at speed than a thin outline would).
-final class Spinosaurus: SKNode, PlayableDino {
+final class Brachiosaurus: SKNode, PlayableDino {
     static let bodyColor = SKColor(red: 0.478, green: 0.353, blue: 0.541, alpha: 1)
 
     private let bodyShape: SKShapeNode
@@ -42,7 +42,7 @@ final class Spinosaurus: SKNode, PlayableDino {
         bodyPath.close()
 
         bodyShape = SKShapeNode(path: bodyPath.cgPath)
-        bodyShape.fillColor = Spinosaurus.bodyColor
+        bodyShape.fillColor = Brachiosaurus.bodyColor
         bodyShape.strokeColor = .clear
         bodyShape.zPosition = 2
 
@@ -57,13 +57,13 @@ final class Spinosaurus: SKNode, PlayableDino {
         }
 
         legBack = SKShapeNode(path: legPath())
-        legBack.fillColor = Spinosaurus.bodyColor
+        legBack.fillColor = Brachiosaurus.bodyColor
         legBack.strokeColor = .clear
         legBack.position = CGPoint(x: -16, y: -8)
         legBack.zPosition = 1
 
         legFront = SKShapeNode(path: legPath())
-        legFront.fillColor = Spinosaurus.bodyColor
+        legFront.fillColor = Brachiosaurus.bodyColor
         legFront.strokeColor = .clear
         legFront.position = CGPoint(x: 22, y: -8)
         legFront.zPosition = 3
@@ -78,7 +78,7 @@ final class Spinosaurus: SKNode, PlayableDino {
         body.isDynamic = true
         body.affectedByGravity = false
         body.allowsRotation = false
-        body.categoryBitMask = PhysicsCategory.spinosaurus
+        body.categoryBitMask = PhysicsCategory.player
         body.contactTestBitMask = PhysicsCategory.asteroid | PhysicsCategory.star
         body.collisionBitMask = PhysicsCategory.ground
         self.physicsBody = body

@@ -30,7 +30,7 @@ final class Asteroid: SKShapeNode {
         let body = SKPhysicsBody(circleOfRadius: radius * 0.8)
         body.isDynamic = false
         body.categoryBitMask = PhysicsCategory.asteroid
-        body.contactTestBitMask = PhysicsCategory.spinosaurus
+        body.contactTestBitMask = PhysicsCategory.player
         body.collisionBitMask = 0
         physicsBody = body
 

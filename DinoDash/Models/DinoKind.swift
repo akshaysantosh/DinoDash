@@ -2,26 +2,26 @@ import Foundation
 
 enum DinoKind: String, CaseIterable {
     case ankylosaurus
-    case spinosaurus
+    case brachiosaurus
 
     var displayName: String {
         switch self {
         case .ankylosaurus: return "Ankylosaurus"
-        case .spinosaurus: return "Spinosaurus"
+        case .brachiosaurus: return "Brachiosaurus"
         }
     }
 
     var previewImageName: String {
         switch self {
         case .ankylosaurus: return "dino-preview-ankylosaurus"
-        case .spinosaurus: return "dino-preview-spinosaurus"
+        case .brachiosaurus: return "dino-preview-brachiosaurus"
         }
     }
 
     func makeNode() -> PlayableDino {
         switch self {
         case .ankylosaurus: return Ankylosaurus()
-        case .spinosaurus: return Spinosaurus()
+        case .brachiosaurus: return Brachiosaurus()
         }
     }
 }
