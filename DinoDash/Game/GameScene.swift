@@ -484,7 +484,16 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
 
     private func spawnWave() {
         let elevated = Int.random(in: 0..<10) < 3
-        let asteroid = Asteroid(radius: elevated ? 15 : CGFloat.random(in: 14...22), isElevated: elevated)
+        // The score-based day-to-space progression reaches the same near-black sky Night Mode
+        // forces explicitly, so asteroids need the light night coloring there too, not just when
+        // the toggle is on — otherwise they'd fade into the darkened hills once you survive long
+        // enough to reach deep space on your own.
+        let isDark = gameState?.isNightMode == true || CGFloat(gameState?.score ?? 0) / 700 >= 0.8
+        let asteroid = Asteroid(
+            radius: elevated ? 15 : CGFloat.random(in: 14...22),
+            isElevated: elevated,
+            isNightMode: isDark
+        )
         asteroid.name = "obstacle"
         asteroid.position = CGPoint(x: size.width + 40, y: groundY + (elevated ? 78 : 14))
         asteroid.zPosition = 4

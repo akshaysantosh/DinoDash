@@ -6,7 +6,7 @@ final class Asteroid: SKShapeNode {
     /// asks for, on top of the single tap-to-jump input.
     let isElevated: Bool
 
-    init(radius: CGFloat, isElevated: Bool) {
+    init(radius: CGFloat, isElevated: Bool, isNightMode: Bool = false) {
         self.isElevated = isElevated
         super.init()
 
@@ -23,8 +23,16 @@ final class Asteroid: SKShapeNode {
         path.close()
 
         self.path = path.cgPath
-        fillColor = SKColor(red: 0.42, green: 0.38, blue: 0.36, alpha: 1)
-        strokeColor = SKColor(red: 0.28, green: 0.25, blue: 0.24, alpha: 1)
+        // The night-sky background is near-black, and the hills sit at 50% opacity over it, so
+        // the daytime asteroid color (a warm dark brown) blends into the darkened hill silhouette
+        // almost exactly — a lighter, cooler tone is needed to actually read against a dark ground.
+        if isNightMode {
+            fillColor = SKColor(red: 0.82, green: 0.76, blue: 0.68, alpha: 1)
+            strokeColor = SKColor(red: 0.55, green: 0.48, blue: 0.42, alpha: 1)
+        } else {
+            fillColor = SKColor(red: 0.42, green: 0.38, blue: 0.36, alpha: 1)
+            strokeColor = SKColor(red: 0.28, green: 0.25, blue: 0.24, alpha: 1)
+        }
         lineWidth = 2
 
         let body = SKPhysicsBody(circleOfRadius: radius * 0.8)
