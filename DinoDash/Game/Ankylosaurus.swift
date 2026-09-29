@@ -5,6 +5,7 @@ import SpriteKit
 /// ankylosaurus feature: a round club at the tail tip, built as its own circle node.
 final class Ankylosaurus: SKNode, PlayableDino {
     static let bodyColor = SKColor(red: 0.376, green: 0.290, blue: 0.439, alpha: 1)
+    static let nightBodyColor = SKColor(red: 0.80, green: 0.70, blue: 0.85, alpha: 1)
 
     private let bodyShape: SKShapeNode
     private let clubShape: SKShapeNode
@@ -169,5 +170,13 @@ final class Ankylosaurus: SKNode, PlayableDino {
         yScale = 1
         alpha = 1
         startRunning()
+    }
+
+    func setNightMode(_ isNight: Bool) {
+        let color = isNight ? Ankylosaurus.nightBodyColor : Ankylosaurus.bodyColor
+        bodyShape.fillColor = color
+        clubShape.fillColor = color
+        legFront.fillColor = color
+        legBack.fillColor = color
     }
 }

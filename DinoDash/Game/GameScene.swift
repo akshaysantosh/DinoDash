@@ -18,6 +18,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
     private var hillsLayer: SKNode!
     private var hillTiles: [SKShapeNode] = []
     private var hillTileWidth: CGFloat = 0
+    private var isDinoDarkened = false
 
     private static let milestoneInterval = 250
     private var nextMilestoneScore = GameScene.milestoneInterval
@@ -484,11 +485,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
 
     private func spawnWave() {
         let elevated = Int.random(in: 0..<10) < 3
-        // The score-based day-to-space progression reaches the same near-black sky Night Mode
-        // forces explicitly, so asteroids need the light night coloring there too, not just when
-        // the toggle is on — otherwise they'd fade into the darkened hills once you survive long
-        // enough to reach deep space on your own.
-        let isDark = gameState?.isNightMode == true || CGFloat(gameState?.score ?? 0) / 700 >= 0.8
+        let isDark = isDarkSky(forScore: gameState?.score ?? 0)
         let asteroid = Asteroid(
             radius: elevated ? 15 : CGFloat.random(in: 14...22),
             isElevated: elevated,
@@ -511,10 +508,24 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
     private static let creamColor = SKColor(red: 0.969, green: 0.965, blue: 0.953, alpha: 1)
     private static let nightSkyColor = SKColor(red: 0.08, green: 0.07, blue: 0.14, alpha: 1)
 
+    /// True once the sky is dark enough that the daytime asteroid/dino colors would blend into
+    /// the (also-darkened) hills — either because Night Mode is on, or because the score-based
+    /// day-to-space progression has reached deep space on its own. Shared by `spawnWave` (so new
+    /// asteroids get the right color) and `updateBackground` (so the dino's does too).
+    private func isDarkSky(forScore score: Int) -> Bool {
+        gameState?.isNightMode == true || CGFloat(score) / 700 >= 0.8
+    }
+
     /// Night Mode forces the sky straight to the same dark palette the score-based progression
     /// eventually reaches on its own, plus the moon — an explicit, immediate look rather than
     /// something you have to survive long enough to see.
     private func updateBackground(for score: Int) {
+        let isDark = isDarkSky(forScore: score)
+        if isDark != isDinoDarkened {
+            isDinoDarkened = isDark
+            dino.setNightMode(isDark)
+        }
+
         guard gameState?.isNightMode != true else {
             backgroundColor = GameScene.nightSkyColor
             starsLayer.alpha = 1

@@ -12,6 +12,9 @@ protocol PlayableDino: SKNode {
     func landed()
     func crash()
     func reset()
+    /// Swaps the character's silhouette to a lighter tone when the sky is dark — the same warm
+    /// purple reads as a near-black blob against the night sky and the darkened hills behind it.
+    func setNightMode(_ isNight: Bool)
 }
 
 /// Shared jump-arc timing, matched across all `PlayableDino` implementations so every

@@ -5,6 +5,7 @@ import SpriteKit
 /// (a filled silhouette reads far better at speed than a thin outline would).
 final class Brachiosaurus: SKNode, PlayableDino {
     static let bodyColor = SKColor(red: 0.478, green: 0.353, blue: 0.541, alpha: 1)
+    static let nightBodyColor = SKColor(red: 0.82, green: 0.72, blue: 0.86, alpha: 1)
 
     private let bodyShape: SKShapeNode
     private let legFront: SKShapeNode
@@ -138,5 +139,12 @@ final class Brachiosaurus: SKNode, PlayableDino {
         yScale = 1
         alpha = 1
         startRunning()
+    }
+
+    func setNightMode(_ isNight: Bool) {
+        let color = isNight ? Brachiosaurus.nightBodyColor : Brachiosaurus.bodyColor
+        bodyShape.fillColor = color
+        legFront.fillColor = color
+        legBack.fillColor = color
     }
 }
