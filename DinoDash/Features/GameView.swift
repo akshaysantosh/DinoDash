@@ -77,7 +77,10 @@ struct GameView: View {
         HStack {
             hudPill(label: "SCORE", value: gameState.score)
             Spacer()
-            nightModeButton
+            HStack(spacing: 12) {
+                MusicToggleButton()
+                nightModeButton
+            }
             Spacer()
             hudPill(label: "BEST", value: gameState.highScore)
         }

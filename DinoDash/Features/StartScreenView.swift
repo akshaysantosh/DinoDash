@@ -24,6 +24,15 @@ struct StartScreenView: View {
                     .padding(.horizontal, 40)
             }
             .padding(32)
+            VStack {
+                HStack {
+                    Spacer()
+                    MusicToggleButton()
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 16)
         }
         .contentShape(Rectangle())
         .onTapGesture { gameState.startGame() }

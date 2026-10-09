@@ -14,5 +14,6 @@ struct RootView: View {
                 GameOverView()
             }
         }
+        .onAppear { MusicPlayer.shared.start(muted: gameState.isMusicMuted) }
     }
 }

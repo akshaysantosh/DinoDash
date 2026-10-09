@@ -27,6 +27,15 @@ final class GameState: ObservableObject {
         didSet { UserDefaults.standard.set(isNightMode, forKey: nightModeKey) }
     }
 
+    /// Mutes the background music only (sound effects are unaffected). Persisted like the other
+    /// look/feel preferences.
+    @Published var isMusicMuted: Bool {
+        didSet {
+            UserDefaults.standard.set(isMusicMuted, forKey: musicMutedKey)
+            MusicPlayer.shared.setMuted(isMusicMuted)
+        }
+    }
+
     /// Top 3 scores, sorted descending — persisted as `leaderboard`.
     @Published private(set) var leaderboard: [LeaderboardEntry] = []
     /// True while a just-finished run's score qualifies for the top 3 but hasn't been named yet
@@ -37,6 +46,7 @@ final class GameState: ObservableObject {
     private let selectedDinoKey = "dinodash.selectedDino"
     private let leaderboardKey = "dinodash.leaderboard"
     private let nightModeKey = "dinodash.isNightMode"
+    private let musicMutedKey = "dinodash.isMusicMuted"
 
     var highScore: Int { leaderboard.first?.score ?? 0 }
 
@@ -47,6 +57,7 @@ final class GameState: ObservableObject {
             selectedDino = .ankylosaurus
         }
         isNightMode = UserDefaults.standard.bool(forKey: nightModeKey)
+        isMusicMuted = UserDefaults.standard.bool(forKey: musicMutedKey)
         if let data = UserDefaults.standard.data(forKey: leaderboardKey),
            let decoded = try? JSONDecoder().decode([LeaderboardEntry].self, from: data) {
             leaderboard = decoded
