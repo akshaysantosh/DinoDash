@@ -38,6 +38,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
     private var nextRoarScore = GameScene.roarInterval
 
     private let jumpFeedback = UIImpactFeedbackGenerator(style: .light)
+    private let landFeedback = UIImpactFeedbackGenerator(style: .soft)
     private let crashFeedback = UINotificationFeedbackGenerator()
     private let roarFeedback = UIImpactFeedbackGenerator(style: .heavy)
 
@@ -85,6 +86,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(dino)
 
         jumpFeedback.prepare()
+        landFeedback.prepare()
         startRun()
     }
 
@@ -225,6 +227,9 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
             guard let self else { return }
             self.isOnGround = true
             self.dino.landed()
+            self.landFeedback.impactOccurred()
+            self.landFeedback.prepare()
+            for _ in 0..<3 { self.spawnDustPuff() }
         }
     }
 

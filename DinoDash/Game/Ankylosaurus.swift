@@ -11,6 +11,8 @@ final class Ankylosaurus: SKNode, PlayableDino {
     private let clubShape: SKShapeNode
     private let legFront: SKShapeNode
     private let legBack: SKShapeNode
+    private let rig = SKNode()
+    private var motion: DinoMotion!
     private var isRunning = false
 
     override init() {
@@ -101,10 +103,13 @@ final class Ankylosaurus: SKNode, PlayableDino {
 
         super.init()
 
-        addChild(legBack)
-        addChild(legFront)
-        addChild(bodyShape)
-        addChild(clubShape)
+        addChild(rig)
+        rig.addChild(legBack)
+        rig.addChild(legFront)
+        rig.addChild(bodyShape)
+        rig.addChild(clubShape)
+        motion = DinoMotion(rig: rig, frontLeg: legFront, backLeg: legBack,
+                            bobbers: [.init(clubShape, amplitude: 3)])
 
         let body = SKPhysicsBody(rectangleOf: CGSize(width: 58, height: 40), center: CGPoint(x: 0, y: 6))
         body.isDynamic = true
@@ -136,11 +141,12 @@ final class Ankylosaurus: SKNode, PlayableDino {
     }
 
     func jump(onLanded: @escaping () -> Void) {
-        stopRunning()
-        run(.sequence([
-            .group([.scaleX(to: 0.85, y: 1.2, duration: 0.08)]),
-            .scaleX(to: 1, y: 1, duration: 0.15)
-        ]))
+        // Pause the run cycle without snapping the legs straight — `DinoMotion` bends and tucks
+        // them for the jump instead.
+        isRunning = false
+        legFront.removeAction(forKey: "run")
+        legBack.removeAction(forKey: "run")
+        motion.takeoff()
 
         let up = SKAction.moveBy(x: 0, y: PlayableDinoJump.height, duration: PlayableDinoJump.upDuration)
         up.timingMode = .easeOut
@@ -151,15 +157,13 @@ final class Ankylosaurus: SKNode, PlayableDino {
 
     func landed() {
         startRunning()
-        run(.sequence([
-            .scaleX(to: 1.2, y: 0.8, duration: 0.06),
-            .scaleX(to: 1, y: 1, duration: 0.12)
-        ]))
+        motion.land()
     }
 
     func crash() {
         stopRunning()
         removeAllActions()
+        motion.resetPose()
         run(.rotate(byAngle: -1.1, duration: 0.4))
     }
 
@@ -169,6 +173,7 @@ final class Ankylosaurus: SKNode, PlayableDino {
         xScale = 1
         yScale = 1
         alpha = 1
+        motion.resetPose()
         startRunning()
     }
 
