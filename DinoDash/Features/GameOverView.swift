@@ -16,7 +16,7 @@ struct GameOverView: View {
 
     var body: some View {
         ZStack {
-            Color.bgPage.ignoresSafeArea()
+            PaperBackground()
             VStack(spacing: 14) {
                 Text(headline)
                     .font(.system(size: 26, weight: .heavy))

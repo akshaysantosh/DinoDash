@@ -143,7 +143,7 @@ struct GameView: View {
                             .padding(.horizontal, 36)
                     }
                     .padding(28)
-                    .background(Color.bgPage, in: RoundedRectangle(cornerRadius: AppMetrics.cardRadius))
+                    .background(PaperBackground().clipShape(RoundedRectangle(cornerRadius: AppMetrics.cardRadius)))
                     .padding(.horizontal, 70)
                 }
                 .contentShape(Rectangle())

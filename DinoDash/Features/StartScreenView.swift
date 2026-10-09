@@ -3,10 +3,15 @@ import SwiftUI
 struct StartScreenView: View {
     @EnvironmentObject private var gameState: GameState
 
+    private var menuPaperTone: Color {
+        let tint = gameState.selectedDino.theme.menuBackdrop
+        return PaperGrain.lifted(red: Double(tint.r), green: Double(tint.g), blue: Double(tint.b))
+    }
+
     var body: some View {
         ZStack {
-            gameState.selectedDino.theme.menuBackdrop.color
-                .ignoresSafeArea()
+            // Each dino's menu tint, on the same grainy paper as the other screens.
+            PaperBackground(base: menuPaperTone)
                 .animation(.easeInOut(duration: 0.3), value: gameState.selectedDino)
             VStack(spacing: 18) {
                 Text("DinoDash")

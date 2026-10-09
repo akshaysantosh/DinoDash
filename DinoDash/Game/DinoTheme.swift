@@ -62,7 +62,7 @@ struct DinoTheme {
         hill: RGB(0.80, 0.66, 0.55, 0.5),
         dust: RGB(0.75, 0.68, 0.58, 0.5),
         pebble: RGB(0.80, 0.78, 0.74, 0.8),
-        menuBackdrop: RGB(0.969, 0.965, 0.953),
+        menuBackdrop: RGB(0.973, 0.965, 0.945),
         hillStyle: .dunes,
         groundDecor: .pebbles,
         ambient: .none,

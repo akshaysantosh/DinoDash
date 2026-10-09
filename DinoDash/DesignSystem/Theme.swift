@@ -9,7 +9,7 @@ extension Color {
     static let textSecondary = Color(hex: "#6b6862")
     static let textMuted = Color(hex: "#8f8b84")
     static let textFaint = Color(hex: "#96918a")
-    static let bgPage = Color(hex: "#f7f6f3")
+    static let bgPage = Color(hex: "#f8f6f1")
     static let bgCard = Color(hex: "#ffffff")
     static let borderCard = Color(hex: "#e5e2da")
     static let accent = Color(hex: "#b5541f")
