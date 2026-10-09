@@ -5,7 +5,9 @@ struct StartScreenView: View {
 
     var body: some View {
         ZStack {
-            Color.bgPage.ignoresSafeArea()
+            gameState.selectedDino.theme.menuBackdrop.color
+                .ignoresSafeArea()
+                .animation(.easeInOut(duration: 0.3), value: gameState.selectedDino)
             VStack(spacing: 18) {
                 Text("DinoDash")
                     .font(.system(size: 36, weight: .heavy))

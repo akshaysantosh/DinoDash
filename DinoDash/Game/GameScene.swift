@@ -1,8 +1,14 @@
+import AVFoundation
 import SpriteKit
 import UIKit
 
 final class GameScene: SKScene, SKPhysicsContactDelegate {
     weak var gameState: GameState?
+
+    /// Per-dino look and feel (sky, hills, ground, asteroid colors, roar style). Cosmetic only —
+    /// all difficulty constants below are shared by every dino.
+    private var theme: DinoTheme = .desert
+    private var roarPlayer: AVAudioPlayer?
 
     private var dino: PlayableDino!
     private var groundY: CGFloat = 0
@@ -54,8 +60,10 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         guard !hasSetUp else { return }
         hasSetUp = true
 
-        backgroundColor = GameScene.creamColor
+        theme = (gameState?.selectedDino ?? .ankylosaurus).theme
+        backgroundColor = theme.skyDay.skColor
         physicsWorld.contactDelegate = self
+        setupRoarPlayer()
 
         groundY = size.height * 0.22
 
@@ -67,7 +75,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
 
         let groundLine = SKShapeNode(rectOf: CGSize(width: size.width * 3, height: 4))
         groundLine.position = CGPoint(x: size.width / 2, y: groundY)
-        groundLine.fillColor = SKColor(red: 0.898, green: 0.886, blue: 0.855, alpha: 1)
+        groundLine.fillColor = theme.groundLine.skColor
         groundLine.strokeColor = .clear
         groundLine.zPosition = 1
         addChild(groundLine)
@@ -115,7 +123,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         moon.addChild(body)
 
         let bite = SKShapeNode(circleOfRadius: radius * 0.82)
-        bite.fillColor = GameScene.nightSkyColor
+        bite.fillColor = theme.nightSky.skColor
         bite.strokeColor = .clear
         bite.position = CGPoint(x: radius * 0.55, y: radius * 0.35)
         bite.zPosition = 1
@@ -126,8 +134,6 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         moon.isHidden = true
         addChild(moon)
     }
-
-    private static let hillColor = SKColor(red: 0.80, green: 0.66, blue: 0.55, alpha: 0.5)
 
     /// Two wide hill silhouettes that scroll slower than the foreground (a fraction of
     /// `gameSpeed`) and recycle from left to right, giving a cheap sense of depth behind the
@@ -147,27 +153,70 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     private func makeHillTile(width: CGFloat) -> SKShapeNode {
-        let h: CGFloat = 46
         let path = UIBezierPath()
-        path.move(to: CGPoint(x: -width / 2, y: 0))
-        path.addCurve(to: CGPoint(x: -width / 4, y: h * 0.7),
-                       controlPoint1: CGPoint(x: -width * 0.42, y: 0),
-                       controlPoint2: CGPoint(x: -width * 0.36, y: h * 0.7))
-        path.addCurve(to: CGPoint(x: 0, y: h * 0.35),
-                       controlPoint1: CGPoint(x: -width * 0.14, y: h * 0.7),
-                       controlPoint2: CGPoint(x: -width * 0.06, y: h * 0.35))
-        path.addCurve(to: CGPoint(x: width / 4, y: h),
-                       controlPoint1: CGPoint(x: width * 0.10, y: h * 0.5),
-                       controlPoint2: CGPoint(x: width * 0.18, y: h))
-        path.addCurve(to: CGPoint(x: width / 2, y: h * 0.4),
-                       controlPoint1: CGPoint(x: width * 0.32, y: h),
-                       controlPoint2: CGPoint(x: width * 0.42, y: h * 0.4))
+        var glowTips: [CGPoint] = []
+
+        switch theme.hillStyle {
+        case .dunes:
+            let h: CGFloat = 46
+            path.move(to: CGPoint(x: -width / 2, y: 0))
+            path.addCurve(to: CGPoint(x: -width / 4, y: h * 0.7),
+                           controlPoint1: CGPoint(x: -width * 0.42, y: 0),
+                           controlPoint2: CGPoint(x: -width * 0.36, y: h * 0.7))
+            path.addCurve(to: CGPoint(x: 0, y: h * 0.35),
+                           controlPoint1: CGPoint(x: -width * 0.14, y: h * 0.7),
+                           controlPoint2: CGPoint(x: -width * 0.06, y: h * 0.35))
+            path.addCurve(to: CGPoint(x: width / 4, y: h),
+                           controlPoint1: CGPoint(x: width * 0.10, y: h * 0.5),
+                           controlPoint2: CGPoint(x: width * 0.18, y: h))
+            path.addCurve(to: CGPoint(x: width / 2, y: h * 0.4),
+                           controlPoint1: CGPoint(x: width * 0.32, y: h),
+                           controlPoint2: CGPoint(x: width * 0.42, y: h * 0.4))
+        case .rolling:
+            // Three soft, round-topped hills that start and end at the same height as the dunes
+            // do, so tiles join up without a seam.
+            let h: CGFloat = 44
+            path.move(to: CGPoint(x: -width / 2, y: h * 0.4))
+            path.addCurve(to: CGPoint(x: -width * 0.2, y: h * 0.85),
+                           controlPoint1: CGPoint(x: -width * 0.45, y: h * 0.4),
+                           controlPoint2: CGPoint(x: -width * 0.36, y: h * 0.95))
+            path.addCurve(to: CGPoint(x: width * 0.08, y: h * 0.3),
+                           controlPoint1: CGPoint(x: -width * 0.06, y: h * 0.75),
+                           controlPoint2: CGPoint(x: -width * 0.04, y: h * 0.3))
+            path.addCurve(to: CGPoint(x: width * 0.3, y: h),
+                           controlPoint1: CGPoint(x: width * 0.16, y: h * 0.3),
+                           controlPoint2: CGPoint(x: width * 0.2, y: h * 1.05))
+            path.addCurve(to: CGPoint(x: width / 2, y: h * 0.4),
+                           controlPoint1: CGPoint(x: width * 0.4, y: h * 0.95),
+                           controlPoint2: CGPoint(x: width * 0.44, y: h * 0.4))
+        case .volcanic:
+            // Jagged cones, two with a glowing crater lip. Both ends sit at 0.4h so tiles meet.
+            let h: CGFloat = 58
+            let pts: [(CGFloat, CGFloat)] = [
+                (-0.5, 0.4), (-0.38, 0.62), (-0.30, 1.0), (-0.22, 0.58), (-0.12, 0.3),
+                (-0.04, 0.5), (0.04, 0.35), (0.14, 0.7), (0.22, 0.95), (0.30, 0.6),
+                (0.40, 0.3), (0.5, 0.4)
+            ]
+            path.move(to: CGPoint(x: width * pts[0].0, y: h * pts[0].1))
+            for p in pts.dropFirst() { path.addLine(to: CGPoint(x: width * p.0, y: h * p.1)) }
+            glowTips = [CGPoint(x: width * -0.30, y: h), CGPoint(x: width * 0.22, y: h * 0.95)]
+        }
         path.addLine(to: CGPoint(x: width / 2, y: 0))
+        path.addLine(to: CGPoint(x: -width / 2, y: 0))
         path.close()
 
         let hill = SKShapeNode(path: path.cgPath)
-        hill.fillColor = GameScene.hillColor
+        hill.fillColor = theme.hill.skColor
         hill.strokeColor = .clear
+
+        for tip in glowTips {
+            let glow = SKShapeNode(ellipseOf: CGSize(width: 16, height: 6))
+            glow.fillColor = SKColor(red: 1.0, green: 0.5, blue: 0.15, alpha: 0.75)
+            glow.strokeColor = .clear
+            glow.position = CGPoint(x: tip.x, y: tip.y - 1)
+            glow.run(.repeatForever(.sequence([.fadeAlpha(to: 0.45, duration: 0.9), .fadeAlpha(to: 1, duration: 0.9)])))
+            hill.addChild(glow)
+        }
         return hill
     }
 
@@ -199,6 +248,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         gameState?.isRoarReady = false
 
         enumerateChildNodes(withName: "pebble") { node, _ in node.removeFromParent() }
+        enumerateChildNodes(withName: "ambient") { node, _ in node.removeFromParent() }
         for (i, hill) in hillTiles.enumerated() {
             hill.position.x = hillTileWidth / 2 + CGFloat(i) * hillTileWidth
         }
@@ -243,21 +293,11 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         gameState?.isRoarReady = false
         nextRoarScore = (gameState?.score ?? 0) + GameScene.roarInterval
 
-        roarFeedback.impactOccurred()
-        run(.playSoundFileNamed("roar.wav", waitForCompletion: false))
+        playRoarHaptic()
+        playRoarSound()
+        performRoarEffect()
 
-        let wave = SKShapeNode(circleOfRadius: 4)
-        wave.position = dino.position
-        wave.fillColor = SKColor(red: 0.76, green: 0.24, blue: 0.13, alpha: 0.35)
-        wave.strokeColor = SKColor(red: 0.76, green: 0.24, blue: 0.13, alpha: 0.6)
-        wave.lineWidth = 3
-        wave.zPosition = 7
-        addChild(wave)
-        wave.run(.sequence([
-            .group([.scale(to: size.width / 2, duration: 0.4), .fadeOut(withDuration: 0.4)]),
-            .removeFromParent()
-        ]))
-
+        let roarColor = theme.roarColor.skColor
         var destroyed = 0
         enumerateChildNodes(withName: "obstacle") { [weak self] node, _ in
             guard let self, node.position.x >= self.dino.position.x - 40 else { return }
@@ -268,8 +308,171 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         if destroyed > 0 {
             gameState?.score += destroyed * 10
             spawnScorePopup("+\(destroyed * 10)", at: CGPoint(x: dino.position.x, y: dino.position.y + 40),
-                             color: SKColor(red: 0.76, green: 0.24, blue: 0.13, alpha: 1))
+                             color: roarColor)
         }
+    }
+
+    // MARK: Roar feel (per-dino, cosmetic only — the gameplay effect in `roar()` is identical)
+
+    private func setupRoarPlayer() {
+        guard let url = Bundle.main.url(forResource: "roar", withExtension: "wav"),
+              let player = try? AVAudioPlayer(contentsOf: url) else { return }
+        player.enableRate = true
+        player.rate = theme.roarSoundRate
+        player.prepareToPlay()
+        roarPlayer = player
+    }
+
+    private func playRoarSound() {
+        if let roarPlayer {
+            roarPlayer.currentTime = 0
+            roarPlayer.play()
+        } else {
+            run(.playSoundFileNamed("roar.wav", waitForCompletion: false))
+        }
+    }
+
+    private func playRoarHaptic() {
+        switch theme.roarHaptic {
+        case .heavy:
+            roarFeedback.impactOccurred()
+        case .rolling:
+            // A soft swell that builds — reads as a long trumpeting call.
+            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+            run(.sequence([.wait(forDuration: 0.12), .run { UIImpactFeedbackGenerator(style: .medium).impactOccurred() },
+                           .wait(forDuration: 0.12), .run { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }]))
+        case .rigid:
+            // A hard, crisp crack followed by a light tick — like spikes snapping out.
+            UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+            run(.sequence([.wait(forDuration: 0.09), .run { UIImpactFeedbackGenerator(style: .light).impactOccurred() }]))
+        }
+    }
+
+    private func performRoarEffect() {
+        let color = theme.roarColor.skColor
+        let reach = size.width / 2
+        let origin = dino.position
+
+        switch theme.roarWave {
+        case .groundSlam:
+            // Club-slam: a flat shock ring racing along the ground, a spray of dust, and a quick
+            // jolt of the hills.
+            addExpandingRing(at: CGPoint(x: origin.x, y: groundY), maxRadius: reach, yRatio: 0.14,
+                             color: color, lineWidth: 3, fillAlpha: 0.22)
+            for _ in 0..<14 { spawnRoarDust(color: theme.dust.skColor) }
+            hillsLayer.run(.sequence([.moveBy(x: 0, y: 6, duration: 0.04), .moveBy(x: 0, y: -10, duration: 0.06),
+                                      .moveBy(x: 0, y: 6, duration: 0.05), .moveBy(x: 0, y: -2, duration: 0.05)]))
+
+        case .gust:
+            // Trumpet-blast: nested crescents sweeping forward plus leaves swept up in the wind.
+            let gust = SKNode()
+            gust.position = CGPoint(x: origin.x + 20, y: origin.y + 6)
+            gust.zPosition = 7
+            for radius in [10.0, 20.0, 30.0, 40.0] as [CGFloat] {
+                let arc = UIBezierPath(arcCenter: .zero, radius: radius, startAngle: -0.9, endAngle: 0.9, clockwise: true)
+                let node = SKShapeNode(path: arc.cgPath)
+                node.strokeColor = color.withAlphaComponent(0.7)
+                node.lineWidth = 0.8
+                node.lineCap = .round
+                gust.addChild(node)
+            }
+            gust.setScale(0.3)
+            addChild(gust)
+            gust.run(.sequence([
+                .group([.scale(to: reach / 40, duration: 0.4), .fadeOut(withDuration: 0.4)]),
+                .removeFromParent()
+            ]))
+            for _ in 0..<9 {
+                let leaf = SKShapeNode(ellipseOf: CGSize(width: 9, height: 4))
+                leaf.fillColor = color.withAlphaComponent(0.85)
+                leaf.strokeColor = .clear
+                leaf.position = CGPoint(x: origin.x + CGFloat.random(in: 10...40), y: origin.y + CGFloat.random(in: -10...40))
+                leaf.zRotation = CGFloat.random(in: 0...(.pi))
+                leaf.zPosition = 7
+                addChild(leaf)
+                let travel = reach * CGFloat.random(in: 0.7...1.1)
+                leaf.run(.sequence([
+                    .group([
+                        .moveBy(x: travel, y: CGFloat.random(in: 10...70), duration: 0.5),
+                        .rotate(byAngle: CGFloat.random(in: -6...6), duration: 0.5),
+                        .sequence([.wait(forDuration: 0.25), .fadeOut(withDuration: 0.25)])
+                    ]),
+                    .removeFromParent()
+                ]))
+            }
+
+        case .spikeBurst:
+            // Thagomizer burst: sharp shards fire out radially from the dino with a faint ring.
+            addExpandingRing(at: origin, maxRadius: reach * 0.55, yRatio: 1,
+                             color: color, lineWidth: 2, fillAlpha: 0)
+            let shardCount = 14
+            for i in 0..<shardCount {
+                let angle = CGFloat(i) / CGFloat(shardCount) * .pi * 2 + CGFloat.random(in: -0.12...0.12)
+                let p = UIBezierPath()
+                p.move(to: CGPoint(x: 14, y: 0))
+                p.addLine(to: CGPoint(x: -4, y: 4))
+                p.addLine(to: CGPoint(x: -4, y: -4))
+                p.close()
+                let shard = SKShapeNode(path: p.cgPath)
+                shard.fillColor = color
+                shard.strokeColor = .clear
+                shard.position = origin
+                shard.zRotation = angle
+                shard.zPosition = 7
+                addChild(shard)
+                let dist = reach * CGFloat.random(in: 0.55...1.0)
+                shard.run(.sequence([
+                    .group([
+                        .moveBy(x: cos(angle) * dist, y: sin(angle) * dist, duration: 0.4),
+                        .sequence([.wait(forDuration: 0.2), .fadeOut(withDuration: 0.2)])
+                    ]),
+                    .removeFromParent()
+                ]))
+            }
+            for _ in 0..<6 { spawnSpark(at: CGPoint(x: origin.x + CGFloat.random(in: -20...30), y: origin.y + CGFloat.random(in: -10...30))) }
+        }
+    }
+
+    /// An expanding ellipse whose stroke stays a constant width (scaling the node would balloon
+    /// the line along with it). `yRatio` flattens it into a ground-hugging shock ring.
+    private func addExpandingRing(at point: CGPoint, maxRadius: CGFloat, yRatio: CGFloat,
+                                  color: SKColor, lineWidth: CGFloat, fillAlpha: CGFloat,
+                                  duration: TimeInterval = 0.4) {
+        let ring = SKShapeNode()
+        ring.position = point
+        ring.zPosition = 7
+        ring.lineWidth = lineWidth
+        ring.strokeColor = color.withAlphaComponent(0.7)
+        ring.fillColor = color.withAlphaComponent(fillAlpha)
+        addChild(ring)
+        ring.run(.sequence([
+            .customAction(withDuration: duration) { node, elapsed in
+                guard let ring = node as? SKShapeNode else { return }
+                let p = CGFloat(elapsed / duration)
+                let r = 4 + (maxRadius - 4) * p
+                ring.path = CGPath(ellipseIn: CGRect(x: -r, y: -r * yRatio, width: r * 2, height: r * 2 * yRatio),
+                                   transform: nil)
+                ring.alpha = 1 - p
+            },
+            .removeFromParent()
+        ]))
+    }
+
+    private func spawnRoarDust(color: SKColor) {
+        let puff = SKShapeNode(circleOfRadius: CGFloat.random(in: 3...6))
+        puff.fillColor = color.withAlphaComponent(0.7)
+        puff.strokeColor = .clear
+        puff.position = CGPoint(x: dino.position.x + CGFloat.random(in: -20...20), y: groundY + CGFloat.random(in: 0...6))
+        puff.zPosition = 6
+        addChild(puff)
+        puff.run(.sequence([
+            .group([
+                .moveBy(x: CGFloat.random(in: 40...(size.width * 0.35)), y: CGFloat.random(in: 8...36), duration: 0.45),
+                .fadeOut(withDuration: 0.45),
+                .scale(to: 2.2, duration: 0.45)
+            ]),
+            .removeFromParent()
+        ]))
     }
 
     /// Handled natively by SpriteKit rather than a SwiftUI `.onTapGesture` on the hosting
@@ -310,6 +513,9 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         if CGFloat.random(in: 0...1) < 0.08 {
             spawnGroundPebble()
+        }
+        if CGFloat.random(in: 0...1) < 0.04 {
+            spawnAmbient()
         }
 
         enumerateChildNodes(withName: "obstacle") { [weak self] node, _ in
@@ -393,7 +599,7 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
 
     private func spawnDustPuff() {
         let dust = SKShapeNode(circleOfRadius: CGFloat.random(in: 2...4))
-        dust.fillColor = SKColor(red: 0.75, green: 0.68, blue: 0.58, alpha: 0.5)
+        dust.fillColor = theme.dust.skColor
         dust.strokeColor = .clear
         dust.position = CGPoint(x: dino.position.x + CGFloat.random(in: -12...(-2)),
                                  y: groundY + CGFloat.random(in: 0...4))
@@ -409,14 +615,76 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         ]))
     }
 
+    /// Scrolling ground texture. Named "pebble" for every world so the existing scroll/cleanup
+    /// code handles it; only the look differs (pebbles, grass tufts, or dark rock with lava glints).
     private func spawnGroundPebble() {
-        let pebble = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.5...3))
-        pebble.fillColor = SKColor(red: 0.80, green: 0.78, blue: 0.74, alpha: 0.8)
-        pebble.strokeColor = .clear
-        pebble.position = CGPoint(x: size.width + 10, y: groundY - CGFloat.random(in: 6...16))
-        pebble.zPosition = 1.1
-        pebble.name = "pebble"
-        addChild(pebble)
+        let decor: SKShapeNode
+        switch theme.groundDecor {
+        case .pebbles:
+            decor = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.5...3))
+            decor.fillColor = theme.pebble.skColor
+        case .grassTufts:
+            let blades = UIBezierPath()
+            let h = CGFloat.random(in: 6...11)
+            for dx: CGFloat in [-3, 0, 3] {
+                blades.move(to: CGPoint(x: dx, y: 0))
+                blades.addLine(to: CGPoint(x: dx * 1.8, y: h * (dx == 0 ? 1 : 0.75)))
+            }
+            decor = SKShapeNode(path: blades.cgPath)
+            decor.strokeColor = theme.pebble.skColor
+            decor.lineWidth = 1.6
+            decor.lineCap = .round
+        case .lavaRocks:
+            let isLava = Int.random(in: 0..<5) == 0
+            decor = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.5...3.2))
+            decor.fillColor = isLava ? SKColor(red: 1.0, green: 0.5, blue: 0.15, alpha: 0.9) : theme.pebble.skColor
+        }
+        if theme.groundDecor != .grassTufts { decor.strokeColor = .clear }
+        decor.position = CGPoint(x: size.width + 10, y: groundY - CGFloat.random(in: 6...16))
+        decor.zPosition = 1.1
+        decor.name = "pebble"
+        addChild(decor)
+    }
+
+    /// Drifting atmosphere: pollen over the grassland, rising embers over the volcanic floor.
+    /// Purely decorative — no physics, capped in number, and not part of the scrolling groups.
+    private func spawnAmbient() {
+        guard theme.ambient != .none else { return }
+        var count = 0
+        enumerateChildNodes(withName: "ambient") { _, _ in count += 1 }
+        guard count < 14 else { return }
+
+        let speck = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.2...2.6))
+        speck.name = "ambient"
+        speck.zPosition = 0.8
+        speck.strokeColor = .clear
+        switch theme.ambient {
+        case .pollen:
+            speck.fillColor = SKColor(red: 1.0, green: 0.95, blue: 0.7, alpha: 0.85)
+            speck.position = CGPoint(x: size.width + 10, y: groundY + CGFloat.random(in: 30...size.height * 0.55))
+            addChild(speck)
+            speck.run(.sequence([
+                .group([
+                    .moveBy(x: -(size.width + 60), y: CGFloat.random(in: -30...30), duration: Double.random(in: 5...8)),
+                    .sequence([.fadeAlpha(to: 0.3, duration: 1), .fadeAlpha(to: 0.9, duration: 1), .fadeAlpha(to: 0.3, duration: 1)])
+                ]),
+                .removeFromParent()
+            ]))
+        case .embers:
+            speck.fillColor = SKColor(red: 1.0, green: CGFloat.random(in: 0.4...0.6), blue: 0.15, alpha: 0.9)
+            speck.position = CGPoint(x: CGFloat.random(in: 0...size.width), y: groundY + CGFloat.random(in: 0...20))
+            addChild(speck)
+            speck.run(.sequence([
+                .group([
+                    .moveBy(x: CGFloat.random(in: -40...(-10)), y: CGFloat.random(in: 90...200), duration: Double.random(in: 1.8...3)),
+                    .sequence([.wait(forDuration: 1.0), .fadeOut(withDuration: 1.0)]),
+                    .scale(to: 0.4, duration: 2.0)
+                ]),
+                .removeFromParent()
+            ]))
+        case .none:
+            break
+        }
     }
 
     private static let confettiColors: [SKColor] = [
@@ -494,7 +762,8 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         let asteroid = Asteroid(
             radius: elevated ? 15 : CGFloat.random(in: 14...22),
             isElevated: elevated,
-            isNightMode: isDark
+            isNightMode: isDark,
+            theme: theme
         )
         asteroid.name = "obstacle"
         asteroid.position = CGPoint(x: size.width + 40, y: groundY + (elevated ? 78 : 14))
@@ -509,9 +778,6 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
             addChild(star)
         }
     }
-
-    private static let creamColor = SKColor(red: 0.969, green: 0.965, blue: 0.953, alpha: 1)
-    private static let nightSkyColor = SKColor(red: 0.08, green: 0.07, blue: 0.14, alpha: 1)
 
     /// True once the sky is dark enough that the daytime asteroid/dino colors would blend into
     /// the (also-darkened) hills — either because Night Mode is on, or because the score-based
@@ -532,26 +798,21 @@ final class GameScene: SKScene, SKPhysicsContactDelegate {
         }
 
         guard gameState?.isNightMode != true else {
-            backgroundColor = GameScene.nightSkyColor
+            backgroundColor = theme.nightSky.skColor
             starsLayer.alpha = 1
             moon.isHidden = false
             return
         }
         moon.isHidden = true
 
+        // Same score timeline for every dino (day → dusk at 350, → space at 700); only the
+        // three palette stops differ per world.
         let t = min(1, CGFloat(score) / 700)
-        let cream: (CGFloat, CGFloat, CGFloat) = (0.969, 0.965, 0.953)
-        let dusk: (CGFloat, CGFloat, CGFloat) = (0.85, 0.55, 0.45)
-        let space: (CGFloat, CGFloat, CGFloat) = (0.08, 0.07, 0.14)
-
-        let from = t < 0.5 ? cream : dusk
-        let to = t < 0.5 ? dusk : space
+        let from = t < 0.5 ? theme.skyDay : theme.skyDusk
+        let to = t < 0.5 ? theme.skyDusk : theme.skySpace
         let localT = t < 0.5 ? t / 0.5 : (t - 0.5) / 0.5
 
-        let r = from.0 + (to.0 - from.0) * localT
-        let g = from.1 + (to.1 - from.1) * localT
-        let b = from.2 + (to.2 - from.2) * localT
-        backgroundColor = SKColor(red: r, green: g, blue: b, alpha: 1)
+        backgroundColor = from.mixed(with: to, localT).skColor
         starsLayer.alpha = t
     }
 
