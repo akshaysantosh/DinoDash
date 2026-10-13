@@ -7,7 +7,7 @@ A simple endless runner for my son — pick a dino (Ankylosaurus by default, or 
   <img src="screenshots/gameplay-desert.png" width="380" alt="Desert world — the Ankylosaurus running past an asteroid with dunes, ground pebbles and foot dust">
 </p>
 <p>
-  <img src="screenshots/gameplay-grassland.png" width="380" alt="Grassland world — the Brachiosaurus jumping over rolling green hills with grass tufts and floating pollen">
+  <img src="screenshots/gameplay-grassland.png" width="380" alt="Grassland world — the long-necked Brachiosaurus running past an asteroid and stars over rolling green hills with grass tufts and floating pollen">
   <img src="screenshots/gameplay-volcanic.png" width="380" alt="Volcanic world — the Stegosaurus running past a lava-edged asteroid and a star, with jagged glowing hills and rising embers">
 </p>
 

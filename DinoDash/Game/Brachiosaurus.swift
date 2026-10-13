@@ -15,28 +15,38 @@ final class Brachiosaurus: SKNode, PlayableDino {
     private var isRunning = false
 
     override init() {
+        // A Brachiosaurus is all neck: a long, upright neck rising from high shoulders to a small
+        // head (this is what makes it read as a brachio rather than a generic dino). The neck is
+        // purely visual — the physics body below is unchanged, so every dino keeps the same hitbox
+        // and difficulty. Head height is capped just under where elevated asteroids sit.
         let bodyPath = UIBezierPath()
         bodyPath.move(to: CGPoint(x: -52, y: -2))
         bodyPath.addCurve(to: CGPoint(x: -28, y: -6),
                            controlPoint1: CGPoint(x: -50, y: -8), controlPoint2: CGPoint(x: -40, y: -10))
         bodyPath.addCurve(to: CGPoint(x: -14, y: 8),
                            controlPoint1: CGPoint(x: -24, y: -2), controlPoint2: CGPoint(x: -20, y: 4))
-        bodyPath.addLine(to: CGPoint(x: -10, y: 16))
-        bodyPath.addLine(to: CGPoint(x: -4, y: 9))
-        bodyPath.addLine(to: CGPoint(x: 0, y: 17))
-        bodyPath.addLine(to: CGPoint(x: 6, y: 10))
-        bodyPath.addCurve(to: CGPoint(x: 18, y: 20),
-                           controlPoint1: CGPoint(x: 10, y: 12), controlPoint2: CGPoint(x: 14, y: 15))
-        bodyPath.addCurve(to: CGPoint(x: 27, y: 32),
-                           controlPoint1: CGPoint(x: 21, y: 25), controlPoint2: CGPoint(x: 23, y: 29))
-        bodyPath.addCurve(to: CGPoint(x: 38, y: 28),
-                           controlPoint1: CGPoint(x: 31, y: 33), controlPoint2: CGPoint(x: 35, y: 32))
-        bodyPath.addLine(to: CGPoint(x: 50, y: 20))
-        bodyPath.addLine(to: CGPoint(x: 44, y: 16))
-        bodyPath.addLine(to: CGPoint(x: 46, y: 10))
-        bodyPath.addLine(to: CGPoint(x: 38, y: 6))
+        // back, rising to the shoulders
+        bodyPath.addCurve(to: CGPoint(x: 6, y: 13),
+                           controlPoint1: CGPoint(x: -8, y: 10), controlPoint2: CGPoint(x: -2, y: 12))
+        // back of the neck, up to the head
+        bodyPath.addCurve(to: CGPoint(x: 23, y: 30),
+                           controlPoint1: CGPoint(x: 14, y: 14), controlPoint2: CGPoint(x: 20, y: 20))
+        bodyPath.addCurve(to: CGPoint(x: 23, y: 43),
+                           controlPoint1: CGPoint(x: 23, y: 36), controlPoint2: CGPoint(x: 22, y: 40))
+        // head
+        bodyPath.addCurve(to: CGPoint(x: 34, y: 46),
+                           controlPoint1: CGPoint(x: 26, y: 46), controlPoint2: CGPoint(x: 30, y: 47))
+        bodyPath.addCurve(to: CGPoint(x: 46, y: 39),
+                           controlPoint1: CGPoint(x: 39, y: 45), controlPoint2: CGPoint(x: 43, y: 42))
+        bodyPath.addLine(to: CGPoint(x: 47, y: 36))
+        bodyPath.addLine(to: CGPoint(x: 42, y: 33.5))
+        // under the jaw, down the throat to the chest
+        bodyPath.addCurve(to: CGPoint(x: 34, y: 32),
+                           controlPoint1: CGPoint(x: 39, y: 34), controlPoint2: CGPoint(x: 37, y: 34))
+        bodyPath.addCurve(to: CGPoint(x: 32, y: 10),
+                           controlPoint1: CGPoint(x: 33.5, y: 24), controlPoint2: CGPoint(x: 33, y: 17))
         bodyPath.addCurve(to: CGPoint(x: 22, y: -6),
-                           controlPoint1: CGPoint(x: 32, y: 2), controlPoint2: CGPoint(x: 28, y: -2))
+                           controlPoint1: CGPoint(x: 31, y: 4), controlPoint2: CGPoint(x: 26, y: -2))
         bodyPath.addLine(to: CGPoint(x: 18, y: -16))
         bodyPath.addCurve(to: CGPoint(x: -30, y: -14),
                            controlPoint1: CGPoint(x: 0, y: -20), controlPoint2: CGPoint(x: -14, y: -18))
